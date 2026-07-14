@@ -13,7 +13,7 @@ const exercises = [
   },
 ] as const;
 
-export default function Home() {
+const Home = () => {
   return (
     <div className="flex flex-1 items-center justify-center bg-white px-6">
       <main className="w-full max-w-2xl py-24">
@@ -52,4 +52,6 @@ export default function Home() {
       </main>
     </div>
   );
-}
+};
+
+export default Home;

@@ -3,6 +3,5 @@ const currencyFormatter = new Intl.NumberFormat("es-ES", {
   currency: "EUR",
 });
 
-export function formatCurrency(value: number): string {
-  return currencyFormatter.format(value);
-}
+export const formatCurrency = (value: number): string =>
+  currencyFormatter.format(value);
