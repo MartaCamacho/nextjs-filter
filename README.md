@@ -1,4 +1,4 @@
-# Range component — Mango technical test
+# Range component
 
 A custom dual-handle range slider (`<Range />`), built from scratch (no `<input type="range">`) in two
 modes:

@@ -21,8 +21,8 @@ const Home = () => {
           Range component
         </h1>
         <p className="mt-3 max-w-lg text-base text-neutral-600">
-          Custom dual-handle range slider built for Mango&apos;s technical
-          test, in two modes.
+          Custom dual-handle range slider component, built from scratch, in
+          two modes.
         </p>
         <ul className="mt-12 divide-y divide-neutral-200 border-y border-neutral-200">
           {exercises.map(({ href, title, description }) => (
