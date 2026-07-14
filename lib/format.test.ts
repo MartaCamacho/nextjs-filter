@@ -1,8 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { formatCurrency } from "./format";
 
-// Reference formatter mirrors production config so this test tracks intent
-// (es-ES EUR formatting), not a hardcoded whitespace character.
 const reference = new Intl.NumberFormat("es-ES", {
   style: "currency",
   currency: "EUR",
