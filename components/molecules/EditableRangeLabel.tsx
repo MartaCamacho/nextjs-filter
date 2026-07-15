@@ -1,6 +1,6 @@
 import { useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { formatCurrency } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { joinClassNames } from "@/lib/utils";
 
 type EditableRangeLabelProps = {
   caption: string;
@@ -48,7 +48,7 @@ const EditableRangeLabel = ({
           onChange={(event) => setDraftValue(event.target.value)}
           onBlur={commit}
           onKeyDown={handleKeyDown}
-          className={cn(
+          className={joinClassNames(
             "w-24 rounded-none border border-black px-2 py-1 text-sm text-black",
             "focus:outline-none",
           )}

@@ -3,5 +3,5 @@ export const clamp = (value: number, min: number, max: number): number =>
 
 type ClassValue = string | false | null | undefined;
 
-export const cn = (...classes: ClassValue[]): string =>
+export const joinClassNames = (...classes: ClassValue[]): string =>
   classes.filter(Boolean).join(" ");
