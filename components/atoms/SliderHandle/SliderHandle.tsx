@@ -3,7 +3,7 @@ import type {
   KeyboardEvent as ReactKeyboardEvent,
   PointerEvent as ReactPointerEvent,
 } from "react";
-import { cn } from "@/lib/utils";
+import { joinClassNames } from "@/lib/utils";
 
 export type SliderHandleAriaProps = Required<
   Pick<
@@ -41,7 +41,7 @@ const SliderHandle = ({
       onPointerDown={onPointerDown}
       onKeyDown={onKeyDown}
       style={{ left: `${percent}%`, zIndex }}
-      className={cn(
+      className={joinClassNames(
         "group absolute top-1/2 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 touch-none items-center justify-center rounded-none",
         "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black",
         isDragging ? "cursor-grabbing" : "cursor-grab",
@@ -49,7 +49,7 @@ const SliderHandle = ({
     >
       <span
         aria-hidden="true"
-        className={cn(
+        className={joinClassNames(
           "h-3 w-3 rounded-none bg-black transition-transform duration-150 group-hover:scale-125",
           isDragging && "scale-125",
         )}

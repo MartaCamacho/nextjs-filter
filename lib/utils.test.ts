@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { clamp, cn } from "./utils";
+import { clamp, joinClassNames } from "./utils";
 
 describe("clamp", () => {
   test("returns the value when inside the range", () => {
@@ -24,16 +24,16 @@ describe("clamp", () => {
   });
 });
 
-describe("cn", () => {
+describe("joinClassNames", () => {
   test("joins truthy class names with a space", () => {
-    expect(cn("a", "b", "c")).toBe("a b c");
+    expect(joinClassNames("a", "b", "c")).toBe("a b c");
   });
 
   test("skips false, null, and undefined", () => {
-    expect(cn("a", false, null, undefined, "b")).toBe("a b");
+    expect(joinClassNames("a", false, null, undefined, "b")).toBe("a b");
   });
 
   test("returns an empty string when nothing is truthy", () => {
-    expect(cn(false, undefined, null)).toBe("");
+    expect(joinClassNames(false, undefined, null)).toBe("");
   });
 });
