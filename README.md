@@ -77,5 +77,39 @@ not just "what did you build."
   version of Next.js boots its HTTP server before loading env files, so `PORT` in `.env` is a no-op (per
   the CLI reference doc).
 
-More sections (state management, the adapter pattern behind both exercises, styling approach, and the
-deliberate testing boundaries) land as the corresponding code does.
+### The Slider engine: one adapter interface, two domains
+
+`/exercise1` and `/exercise2` are the same interaction — drag two handles, keyboard-step them, don't let
+them cross — over two different domains: a continuous range and a fixed list of values. Rather than build
+two sliders, `components/organisms/Slider` implements the interaction once (drag, keyboard, ARIA,
+collision) and takes a `RangeAdapter` that answers the only questions that actually differ between the two
+domains: what are the bounds, how does a value map to a track position, and what's the next/previous valid
+value.
+
+- `createContinuousAdapter(min, max, step)` — plain percentage math.
+- `createDiscreteAdapter(values)` — spaces allowed values **evenly by index**, not proportionally by
+  magnitude. With `[1.99, 5.99, 10.99, 30.99, 50.99, 70.99]` the gaps are 4/5/20/20/20; magnitude-based
+  spacing would cram the first three options into ~13% of the track — tiny, hard-to-hit targets. Pinned in
+  a test: `valueToPercent(30.99) === 60` (index 3 of 5), not ~48.9%.
+
+The honest reason this is worth it isn't "saves memory" (materializing an array for `{min:1,max:100}`
+costs nothing) — it's that collision-prevention, keyboard handling, and ARIA wiring are hard to get right
+and are exactly the same regardless of domain, so they get written and tested once. `Slider` itself has no
+idea whether it's continuous or discrete.
+
+Collision (handles can't cross) is deliberately **not** part of the adapter — it's resolved once in
+`useDualSlider` via a plain clamp against the sibling handle's current value. Home/End reuse that same
+clamp by always passing the domain bound (`adapter.min`/`adapter.max`); since the clamp is already
+sibling-aware, "jump to the domain edge" and "jump to the sibling" fall out of the same code path instead
+of needing a special case.
+
+### Testing scope so far
+
+Adapter math and `Slider`'s keyboard/ARIA/collision behavior are covered thoroughly (both domains). Drag
+is covered by mechanics-level tests with a mocked `getBoundingClientRect`, but keyboard is the primary
+interaction-test surface — no real layout in `jsdom`, so keyboard needs no mocking and is less brittle.
+Not tested: hover-enlarge and the `cursor: grab`/`grabbing` states, since they're pure CSS with no
+observable effect without real layout/paint.
+
+More sections (state management, mocked data fetching, and the deliberate testing boundary around async
+Server Components) land as the corresponding code does.
