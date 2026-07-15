@@ -165,4 +165,18 @@ exercise asks for unit/integration tests). The actual risk this leaves uncovered
 page is intentionally just an `await` plus a prop-pass to an already-tested component, with `next build`
 itself (not a unit test) verifying it renders correctly as static output.
 
-More sections land as the corresponding code does (chunk 5's fixed-values range, chunk 6's final pass).
+### Exercise 2: how much of exercise 1 actually gets reused
+
+`FixedValuesRange` is `Slider` (discrete adapter instead of continuous) + two static `RangeLabel` +
+`createRangeStore` — no new interaction logic at all. `RangeLabel` itself only exists as its own component
+because exercise 2 gave it a second, genuinely different caller: it was extracted out of
+`EditableRangeLabel` at that point, not before, since a shared component with exactly one caller is just
+indirection. `EditableRangeLabel` now renders `RangeLabel` for its non-editing state (passing an `onClick`
+turns the value into a button; omitting it — exercise 2's case — renders a plain span), instead of the two
+components duplicating the same caption+value markup.
+
+`app/exercise1/page.tsx` and `app/exercise2/page.tsx` still duplicate the same ~10 lines of page shell
+(back link, wrapper, heading). Left as-is rather than pulled into a shared layout — it's small, stable,
+and restructuring already-shipped routing for that little code wasn't worth it.
+
+More sections land as the corresponding code does (chunk 6's final pass).
