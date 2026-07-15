@@ -141,5 +141,28 @@ so importing anything through it inside a Vitest test throws unconditionally, re
 environment. Given these functions hold no secrets and do nothing unsafe to run in a browser, the
 protection wasn't worth losing the ability to unit test the Route Handlers directly.
 
-More sections (state management and the deliberate testing boundary around async Server Components) land
-as the corresponding code does.
+### State: Zustand at the organism, not in the Slider
+
+`Slider` and `EditableRangeLabel` stay controlled (`value`/`onChange` props) and know nothing about
+Zustand — they're the reusable, domain-agnostic pieces, and chunk 2's tests already prove they work
+against plain `useState`. `NumberRange` is where a `createRangeStore(adapter, initial)` instance replaces
+what would otherwise be a `useState`, created once per mount via `useState(() => createRangeStore(...))`
+rather than a module-level singleton — that specifically avoids a stale value surviving a client-side
+navigation away from and back to `/exercise1`, which a singleton store would not.
+
+Being honest about what this buys, since the component tree here is too shallow (organism → two direct
+children) for Zustand's selective-subscription re-render benefit to matter much: the real win is that
+`setMinValue`/`setMaxValue`'s clamping rules live in one place, testable as plain function calls with zero
+React involved (`lib/store.test.ts`) — both the slider's drag/keyboard path and the editable label's typed
+commits end up going through the exact same two functions, so there's only one clamping rule to get right
+and test, not one per input method.
+
+### Deliberately not unit-tested: `page.tsx`
+
+`app/exercise1/page.tsx` has no test file. Both Vitest's and Jest's official docs for this Next.js version
+say async Server Components aren't supported by either — recommended path is E2E, out of scope here (the
+exercise asks for unit/integration tests). The actual risk this leaves uncovered is small on purpose: the
+page is intentionally just an `await` plus a prop-pass to an already-tested component, with `next build`
+itself (not a unit test) verifying it renders correctly as static output.
+
+More sections land as the corresponding code does (chunk 5's fixed-values range, chunk 6's final pass).
