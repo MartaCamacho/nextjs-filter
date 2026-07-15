@@ -111,5 +111,35 @@ interaction-test surface — no real layout in `jsdom`, so keyboard needs no moc
 Not tested: hover-enlarge and the `cursor: grab`/`grabbing` states, since they're pure CSS with no
 observable effect without real layout/paint.
 
-More sections (state management, mocked data fetching, and the deliberate testing boundary around async
-Server Components) land as the corresponding code does.
+### Mocked data: functions first, Route Handlers as a thin wrapper
+
+`lib/data.ts` has both mock services — `getNumberRange` and `getFixedRangeValues` — in one file. They
+started out as two files plus a separate shared-delay file; consolidated because the combined logic is
+about twenty lines, and three files (plus two near-identical route test files) for that was more
+navigation than the code warranted. Each `app/api/*/route.ts` is a thin `GET` wrapper around one of these
+functions — a real, independently curlable HTTP endpoint, which is what the exercise asks for — and the
+two route tests live together in one `app/api/routes.test.ts` for the same reason. The two
+`app/api/*/route.ts` files themselves can't merge: Next.js's App Router requires one `route.ts` per URL
+segment, and the exported function must be literally named after the HTTP verb (`GET`) for the framework
+to wire it up — not a naming choice, a routing convention.
+
+Server Components (landing in the next two chunks) call the `lib/data` functions **directly**, not through
+`fetch('/api/...')`.
+
+This wasn't the original plan — self-fetching the Route Handler from the Server Component was, since it
+seemed like the more literal way to satisfy "provide a mocked HTTP service ... to be used in the
+component." It doesn't work in this Next.js version: prerendering a Server Component that `fetch()`es its
+own Route Handler fails `next build`, because there's no server listening for that request at build time
+(there's no such problem in `next dev`, which is exactly what makes this easy to ship without noticing).
+Calling the function directly avoids the round trip entirely — it's also faster, which serves the
+"as much server-side as possible" goal better than the HTTP round trip would have.
+
+Tried and reverted: marking these functions with `import "server-only"` to fail the build if a client
+component ever imported them by mistake. It doesn't do a runtime check — it relies on the bundler
+resolving a `react-server` export condition, which Next.js's bundler sets and Vitest's resolver doesn't,
+so importing anything through it inside a Vitest test throws unconditionally, regardless of test
+environment. Given these functions hold no secrets and do nothing unsafe to run in a browser, the
+protection wasn't worth losing the ability to unit test the Route Handlers directly.
+
+More sections (state management and the deliberate testing boundary around async Server Components) land
+as the corresponding code does.
