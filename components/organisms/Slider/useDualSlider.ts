@@ -7,6 +7,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type RefObject,
 } from "react";
+import type { SliderHandleAriaProps } from "@/components/atoms/SliderHandle";
 import { clamp } from "@/lib/utils";
 import type { RangeAdapter, SelectedRange } from "@/types/range";
 
@@ -16,6 +17,8 @@ type UseDualSliderProps = {
   adapter: RangeAdapter;
   value: SelectedRange;
   onChange: (next: SelectedRange) => void;
+  minLabel: string;
+  maxLabel: string;
   formatValue: (value: number) => string;
 };
 
@@ -23,10 +26,8 @@ type HandleRenderProps = {
   percent: number;
   zIndex: number;
   valueNow: number;
-  valueMin: number;
-  valueMax: number;
-  valueText: string;
   isDragging: boolean;
+  ariaProps: SliderHandleAriaProps;
   onPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => void;
   onKeyDown: (event: ReactKeyboardEvent<HTMLDivElement>) => void;
 };
@@ -42,6 +43,8 @@ export const useDualSlider = ({
   adapter,
   value,
   onChange,
+  minLabel,
+  maxLabel,
   formatValue,
 }: UseDualSliderProps): UseDualSliderResult => {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -106,10 +109,13 @@ export const useDualSlider = ({
       percent: adapter.valueToPercent(currentValue),
       zIndex: activeHandle === handle ? 2 : 1,
       valueNow: currentValue,
-      valueMin: isMin ? adapter.min : value.minValue,
-      valueMax: isMin ? value.maxValue : adapter.max,
-      valueText: formatValue(currentValue),
       isDragging: draggingHandle === handle,
+      ariaProps: {
+        "aria-label": isMin ? minLabel : maxLabel,
+        "aria-valuemin": isMin ? adapter.min : value.minValue,
+        "aria-valuemax": isMin ? value.maxValue : adapter.max,
+        "aria-valuetext": formatValue(currentValue),
+      },
       onPointerDown: (event) => {
         event.preventDefault();
         setActiveHandle(handle);

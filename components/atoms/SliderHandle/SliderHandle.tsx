@@ -1,18 +1,23 @@
 import type {
+  AriaAttributes,
   KeyboardEvent as ReactKeyboardEvent,
   PointerEvent as ReactPointerEvent,
 } from "react";
 import { cn } from "@/lib/utils";
 
+export type SliderHandleAriaProps = Required<
+  Pick<
+    AriaAttributes,
+    "aria-label" | "aria-valuemin" | "aria-valuemax" | "aria-valuetext"
+  >
+>;
+
 type SliderHandleProps = {
   percent: number;
   zIndex: number;
-  label: string;
   valueNow: number;
-  valueMin: number;
-  valueMax: number;
-  valueText: string;
   isDragging: boolean;
+  ariaProps: SliderHandleAriaProps;
   onPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => void;
   onKeyDown: (event: ReactKeyboardEvent<HTMLDivElement>) => void;
 };
@@ -20,12 +25,9 @@ type SliderHandleProps = {
 const SliderHandle = ({
   percent,
   zIndex,
-  label,
   valueNow,
-  valueMin,
-  valueMax,
-  valueText,
   isDragging,
+  ariaProps,
   onPointerDown,
   onKeyDown,
 }: SliderHandleProps) => {
@@ -33,12 +35,9 @@ const SliderHandle = ({
     <div
       role="slider"
       tabIndex={0}
-      aria-label={label}
-      aria-valuenow={valueNow}
-      aria-valuemin={valueMin}
-      aria-valuemax={valueMax}
-      aria-valuetext={valueText}
       aria-orientation="horizontal"
+      aria-valuenow={valueNow}
+      {...ariaProps}
       onPointerDown={onPointerDown}
       onKeyDown={onKeyDown}
       style={{ left: `${percent}%`, zIndex }}

@@ -24,14 +24,16 @@ const Slider = ({
     adapter,
     value,
     onChange,
+    minLabel,
+    maxLabel,
     formatValue,
   });
 
   return (
     <div ref={trackRef} className="relative flex h-11 w-full items-center">
       <SliderTrack minPercent={minPercent} maxPercent={maxPercent} />
-      <SliderHandle label={minLabel} {...getHandleProps("min")} />
-      <SliderHandle label={maxLabel} {...getHandleProps("max")} />
+      <SliderHandle {...getHandleProps("min")} />
+      <SliderHandle {...getHandleProps("max")} />
     </div>
   );
 };
