@@ -20,40 +20,18 @@ const Slider = ({
   maxLabel,
   formatValue,
 }: SliderProps) => {
-  const {
-    trackRef,
-    minPercent,
-    maxPercent,
-    draggingHandle,
-    activeHandle,
-    getHandleProps,
-  } = useDualSlider({ adapter, value, onChange });
+  const { trackRef, minPercent, maxPercent, getHandleProps } = useDualSlider({
+    adapter,
+    value,
+    onChange,
+    formatValue,
+  });
 
   return (
     <div ref={trackRef} className="relative flex h-11 w-full items-center">
       <SliderTrack minPercent={minPercent} maxPercent={maxPercent} />
-      <SliderHandle
-        percent={minPercent}
-        zIndex={activeHandle === "min" ? 2 : 1}
-        label={minLabel}
-        valueNow={value.minValue}
-        valueMin={adapter.min}
-        valueMax={value.maxValue}
-        valueText={formatValue(value.minValue)}
-        isDragging={draggingHandle === "min"}
-        {...getHandleProps("min")}
-      />
-      <SliderHandle
-        percent={maxPercent}
-        zIndex={activeHandle === "max" ? 2 : 1}
-        label={maxLabel}
-        valueNow={value.maxValue}
-        valueMin={value.minValue}
-        valueMax={adapter.max}
-        valueText={formatValue(value.maxValue)}
-        isDragging={draggingHandle === "max"}
-        {...getHandleProps("max")}
-      />
+      <SliderHandle label={minLabel} {...getHandleProps("min")} />
+      <SliderHandle label={maxLabel} {...getHandleProps("max")} />
     </div>
   );
 };

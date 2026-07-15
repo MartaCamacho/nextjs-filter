@@ -16,9 +16,17 @@ type UseDualSliderProps = {
   adapter: RangeAdapter;
   value: SelectedRange;
   onChange: (next: SelectedRange) => void;
+  formatValue: (value: number) => string;
 };
 
-type HandleProps = {
+type HandleRenderProps = {
+  percent: number;
+  zIndex: number;
+  valueNow: number;
+  valueMin: number;
+  valueMax: number;
+  valueText: string;
+  isDragging: boolean;
   onPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => void;
   onKeyDown: (event: ReactKeyboardEvent<HTMLDivElement>) => void;
 };
@@ -27,15 +35,14 @@ type UseDualSliderResult = {
   trackRef: RefObject<HTMLDivElement | null>;
   minPercent: number;
   maxPercent: number;
-  draggingHandle: HandleKey | null;
-  activeHandle: HandleKey;
-  getHandleProps: (handle: HandleKey) => HandleProps;
+  getHandleProps: (handle: HandleKey) => HandleRenderProps;
 };
 
 export const useDualSlider = ({
   adapter,
   value,
   onChange,
+  formatValue,
 }: UseDualSliderProps): UseDualSliderResult => {
   const trackRef = useRef<HTMLDivElement>(null);
   const [draggingHandle, setDraggingHandle] = useState<HandleKey | null>(
@@ -91,50 +98,58 @@ export const useDualSlider = ({
     };
   }, [draggingHandle, adapter, percentFromClientX, setValueForHandle]);
 
-  const getHandleProps = (handle: HandleKey): HandleProps => ({
-    onPointerDown: (event) => {
-      event.preventDefault();
-      setActiveHandle(handle);
-      setDraggingHandle(handle);
-    },
-    onKeyDown: (event) => {
-      const currentValue = handle === "min" ? value.minValue : value.maxValue;
+  const getHandleProps = (handle: HandleKey): HandleRenderProps => {
+    const isMin = handle === "min";
+    const currentValue = isMin ? value.minValue : value.maxValue;
 
-      switch (event.key) {
-        case "ArrowRight":
-        case "ArrowUp":
-          event.preventDefault();
-          setActiveHandle(handle);
-          setValueForHandle(handle, adapter.step(currentValue, 1));
-          break;
-        case "ArrowLeft":
-        case "ArrowDown":
-          event.preventDefault();
-          setActiveHandle(handle);
-          setValueForHandle(handle, adapter.step(currentValue, -1));
-          break;
-        case "Home":
-          event.preventDefault();
-          setActiveHandle(handle);
-          setValueForHandle(handle, adapter.min);
-          break;
-        case "End":
-          event.preventDefault();
-          setActiveHandle(handle);
-          setValueForHandle(handle, adapter.max);
-          break;
-        default:
-          break;
-      }
-    },
-  });
+    return {
+      percent: adapter.valueToPercent(currentValue),
+      zIndex: activeHandle === handle ? 2 : 1,
+      valueNow: currentValue,
+      valueMin: isMin ? adapter.min : value.minValue,
+      valueMax: isMin ? value.maxValue : adapter.max,
+      valueText: formatValue(currentValue),
+      isDragging: draggingHandle === handle,
+      onPointerDown: (event) => {
+        event.preventDefault();
+        setActiveHandle(handle);
+        setDraggingHandle(handle);
+      },
+      onKeyDown: (event) => {
+        switch (event.key) {
+          case "ArrowRight":
+          case "ArrowUp":
+            event.preventDefault();
+            setActiveHandle(handle);
+            setValueForHandle(handle, adapter.step(currentValue, 1));
+            break;
+          case "ArrowLeft":
+          case "ArrowDown":
+            event.preventDefault();
+            setActiveHandle(handle);
+            setValueForHandle(handle, adapter.step(currentValue, -1));
+            break;
+          case "Home":
+            event.preventDefault();
+            setActiveHandle(handle);
+            setValueForHandle(handle, adapter.min);
+            break;
+          case "End":
+            event.preventDefault();
+            setActiveHandle(handle);
+            setValueForHandle(handle, adapter.max);
+            break;
+          default:
+            break;
+        }
+      },
+    };
+  };
 
   return {
     trackRef,
     minPercent: adapter.valueToPercent(value.minValue),
     maxPercent: adapter.valueToPercent(value.maxValue),
-    draggingHandle,
-    activeHandle,
     getHandleProps,
   };
 };
