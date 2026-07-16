@@ -56,7 +56,7 @@ components/
   organisms/   — feature-complete pieces (the generic Slider engine,
                  and the two exercise-specific compositions)
 
-lib/           — adapters, stores, mock data functions, format/utils helpers
+lib/           — adapters, mock data functions, format/utils helpers
 types/         — shared TypeScript types
 ```
 
@@ -141,21 +141,38 @@ so importing anything through it inside a Vitest test throws unconditionally, re
 environment. Given these functions hold no secrets and do nothing unsafe to run in a browser, the
 protection wasn't worth losing the ability to unit test the Route Handlers directly.
 
-### State: Zustand at the organism, not in the Slider
+### State: plain `useState`, not Zustand — and how that conclusion was reached
 
-`Slider` and `EditableRangeLabel` stay controlled (`value`/`onChange` props) and know nothing about
-Zustand — they're the reusable, domain-agnostic pieces, and chunk 2's tests already prove they work
-against plain `useState`. `NumberRange` is where a `createRangeStore(adapter, initial)` instance replaces
-what would otherwise be a `useState`, created once per mount via `useState(() => createRangeStore(...))`
-rather than a module-level singleton — that specifically avoids a stale value surviving a client-side
-navigation away from and back to `/exercise1`, which a singleton store would not.
+`Slider` and `EditableRangeLabel` stay controlled (`value`/`onChange` props) regardless of what manages
+state above them — the reusable, domain-agnostic pieces, proven against plain `useState` since chunk 2's
+tests. The question was only ever about `NumberRange`/`FixedValuesRange`'s own `{minValue, maxValue}`.
 
-Being honest about what this buys, since the component tree here is too shallow (organism → two direct
-children) for Zustand's selective-subscription re-render benefit to matter much: the real win is that
-`setMinValue`/`setMaxValue`'s clamping rules live in one place, testable as plain function calls with zero
-React involved (`lib/store.test.ts`) — both the slider's drag/keyboard path and the editable label's typed
-commits end up going through the exact same two functions, so there's only one clamping rule to get right
-and test, not one per input method.
+This went through three iterations, worth documenting because each one was wrong for a concrete, checkable
+reason, not a style preference:
+
+1. **A Zustand store created once per component instance** (`useState(() => createRangeStore(...))`).
+   Correct and matches Zustand's own documented pattern for "initialize a store with props from a
+   component" (see `React context` in Zustand's README) — but unfamiliar enough on sight to warrant a
+   second look, which led to trying something that looked simpler.
+2. **A single module-level Zustand store**, seeded from props via `useLayoutEffect`. This is the version
+   that looked simpler but wasn't: a module-level store can't know a page's server-fetched `min`/`max` at
+   the time the module is evaluated, so its initial state is whatever's hardcoded — and that's what
+   `next build` actually emits into the static HTML. Confirmed by reading the generated output directly:
+   `grep aria-valuenow .next/server/app/exercise1.html` showed `"0"` and `"0"` instead of `"1"` and `"100"`
+   — a real, measurable defect (visible to no-JS clients, slow connections, and crawlers), not a
+   theoretical one, and exactly the failure mode Zustand's docs point at when they recommend a scoped
+   store over a singleton for this case.
+3. **Plain `useState<SelectedRange>` seeded directly from props, no store at all.** `useState`'s initial
+   value is correct from the very first render — server-rendered HTML included — with no effect required
+   to correct it after the fact. Clamping stays centralized as two small calls to the existing `clamp`
+   utility (`lib/utils.ts`), inline in each organism, reached by both the slider's drag/keyboard path
+   (already clamped by `useDualSlider` before it gets here) and the editable label's typed commits.
+   Re-verified against the built output: `aria-valuenow` now reads `"1"`/`"100"` in the static HTML.
+
+The state here is fully scoped to one component's lifetime and derived from its own props — not
+cross-page or cross-component shared state, which is the problem Zustand (or Redux, or Context) actually
+solves. Reaching for a state library because "we're using it elsewhere in the project" rather than because
+this specific state needs it is exactly how the module-level-singleton version happened.
 
 ### Deliberately not unit-tested: `page.tsx`
 
@@ -167,8 +184,8 @@ itself (not a unit test) verifying it renders correctly as static output.
 
 ### Exercise 2: how much of exercise 1 actually gets reused
 
-`FixedValuesRange` is `Slider` (discrete adapter instead of continuous) + two static `RangeLabel` +
-`createRangeStore` — no new interaction logic at all. `RangeLabel` itself only exists as its own component
+`FixedValuesRange` is `Slider` (discrete adapter instead of continuous) + two static `RangeLabel` + its own
+`useState<SelectedRange>` — no new interaction logic at all. `RangeLabel` itself only exists as its own component
 because exercise 2 gave it a second, genuinely different caller: it was extracted out of
 `EditableRangeLabel` at that point, not before, since a shared component with exactly one caller is just
 indirection. `EditableRangeLabel` now renders `RangeLabel` for its non-editing state (passing an `onClick`
