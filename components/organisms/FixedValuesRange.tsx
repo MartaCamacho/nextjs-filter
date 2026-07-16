@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import RangeLabel from "@/components/atoms/RangeLabel";
 import Slider from "@/components/organisms/Slider";
 import { formatCurrency } from "@/lib/format";
@@ -20,7 +21,14 @@ const FixedValuesRange = ({ rangeValues }: FixedRangeValuesResponse) => {
     }),
   );
 
-  const { minValue, maxValue, setMinValue, setMaxValue } = useRangeStore();
+  const { minValue, maxValue, setMinValue, setMaxValue } = useRangeStore(
+    useShallow((state) => ({
+      minValue: state.minValue,
+      maxValue: state.maxValue,
+      setMinValue: state.setMinValue,
+      setMaxValue: state.setMaxValue,
+    })),
+  );
 
   return (
     <div className="w-full">

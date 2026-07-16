@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import EditableRangeLabel from "@/components/molecules/EditableRangeLabel";
 import Slider from "@/components/organisms/Slider";
 import { formatCurrency } from "@/lib/format";
@@ -17,7 +18,14 @@ const NumberRange = ({ min, max }: NumberRangeResponse) => {
     createRangeStore(adapter, { minValue: min, maxValue: max }),
   );
 
-  const { minValue, maxValue, setMinValue, setMaxValue } = useRangeStore();
+  const { minValue, maxValue, setMinValue, setMaxValue } = useRangeStore(
+    useShallow((state) => ({
+      minValue: state.minValue,
+      maxValue: state.maxValue,
+      setMinValue: state.setMinValue,
+      setMaxValue: state.setMaxValue,
+    })),
+  );
 
   return (
     <div className="w-full">
