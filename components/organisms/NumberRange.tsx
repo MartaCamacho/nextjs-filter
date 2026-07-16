@@ -5,32 +5,39 @@ import EditableRangeLabel from "@/components/molecules/EditableRangeLabel";
 import Slider from "@/components/organisms/Slider";
 import { formatCurrency } from "@/lib/format";
 import { createContinuousAdapter } from "@/lib/slider/adapters";
-import { createRangeStore } from "@/lib/store";
-import type { NumberRangeResponse } from "@/types/range";
+import { clamp } from "@/lib/utils";
+import type { NumberRangeResponse, SelectedRange } from "@/types/range";
 
 const NumberRange = ({ min, max }: NumberRangeResponse) => {
   const adapter = useMemo(
     () => createContinuousAdapter(min, max),
     [min, max],
   );
-  const [useRangeStore] = useState(() =>
-    createRangeStore(adapter, { minValue: min, maxValue: max }),
-  );
+  const [range, setRange] = useState<SelectedRange>(() => ({
+    minValue: min,
+    maxValue: max,
+  }));
 
-  const minValue = useRangeStore((state) => state.minValue);
-  const maxValue = useRangeStore((state) => state.maxValue);
-  const setMinValue = useRangeStore((state) => state.setMinValue);
-  const setMaxValue = useRangeStore((state) => state.setMaxValue);
+  const commitMinValue = (value: number) => {
+    setRange((current) => ({
+      ...current,
+      minValue: clamp(value, adapter.min, current.maxValue),
+    }));
+  };
+
+  const commitMaxValue = (value: number) => {
+    setRange((current) => ({
+      ...current,
+      maxValue: clamp(value, current.minValue, adapter.max),
+    }));
+  };
 
   return (
     <div className="w-full">
       <Slider
         adapter={adapter}
-        value={{ minValue, maxValue }}
-        onChange={(next) => {
-          setMinValue(next.minValue);
-          setMaxValue(next.maxValue);
-        }}
+        value={range}
+        onChange={setRange}
         minLabel="Minimum price"
         maxLabel="Maximum price"
         formatValue={formatCurrency}
@@ -38,13 +45,13 @@ const NumberRange = ({ min, max }: NumberRangeResponse) => {
       <div className="mt-6 flex items-center justify-between">
         <EditableRangeLabel
           caption="From"
-          value={minValue}
-          onCommit={setMinValue}
+          value={range.minValue}
+          onCommit={commitMinValue}
         />
         <EditableRangeLabel
           caption="To"
-          value={maxValue}
-          onCommit={setMaxValue}
+          value={range.maxValue}
+          onCommit={commitMaxValue}
         />
       </div>
     </div>

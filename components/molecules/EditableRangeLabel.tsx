@@ -1,5 +1,5 @@
 import { useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
-import { formatCurrency } from "@/lib/format";
+import RangeLabel from "@/components/atoms/RangeLabel";
 import { joinClassNames } from "@/lib/utils";
 
 type EditableRangeLabelProps = {
@@ -34,34 +34,30 @@ const EditableRangeLabel = ({
     if (event.key === "Escape") setIsEditing(false);
   };
 
+  if (!isEditing) {
+    return (
+      <RangeLabel caption={caption} value={value} onClick={startEditing} />
+    );
+  }
+
   return (
     <div>
       <span className="block text-xs font-bold tracking-wide text-neutral-500 uppercase">
         {caption}
       </span>
-      {isEditing ? (
-        <input
-          type="number"
-          step="0.01"
-          autoFocus
-          value={draftValue}
-          onChange={(event) => setDraftValue(event.target.value)}
-          onBlur={commit}
-          onKeyDown={handleKeyDown}
-          className={joinClassNames(
-            "w-24 rounded-none border border-black px-2 py-1 text-sm text-black",
-            "focus:outline-none",
-          )}
-        />
-      ) : (
-        <button
-          type="button"
-          onClick={startEditing}
-          className="text-sm text-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
-        >
-          {formatCurrency(value)}
-        </button>
-      )}
+      <input
+        type="number"
+        step="0.01"
+        autoFocus
+        value={draftValue}
+        onChange={(event) => setDraftValue(event.target.value)}
+        onBlur={commit}
+        onKeyDown={handleKeyDown}
+        className={joinClassNames(
+          "w-24 rounded-none border border-black px-2 py-1 text-sm text-black",
+          "focus:outline-none",
+        )}
+      />
     </div>
   );
 };
