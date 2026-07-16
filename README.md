@@ -29,8 +29,8 @@ npm test        # watch mode
 npm run test:ci # single run, used in CI
 ```
 
-Vitest + React Testing Library (`jsdom` environment). See the "Testing scope" section below (filled in as
-the interactive components land) for what's covered deliberately vs. skipped, and why.
+Vitest + React Testing Library (`jsdom` environment). See "Testing scope so far" and "Where this landed"
+below for what's covered deliberately vs. skipped, and why.
 
 ## Other scripts
 
@@ -123,7 +123,7 @@ two route tests live together in one `app/api/routes.test.ts` for the same reaso
 segment, and the exported function must be literally named after the HTTP verb (`GET`) for the framework
 to wire it up — not a naming choice, a routing convention.
 
-Server Components (landing in the next two chunks) call the `lib/data` functions **directly**, not through
+Each exercise's Server Component calls the `lib/data` functions **directly**, not through
 `fetch('/api/...')`.
 
 This wasn't the original plan — self-fetching the Route Handler from the Server Component was, since it
@@ -196,4 +196,38 @@ components duplicating the same caption+value markup.
 (back link, wrapper, heading). Left as-is rather than pulled into a shared layout — it's small, stable,
 and restructuring already-shipped routing for that little code wasn't worth it.
 
-More sections land as the corresponding code does (chunk 6's final pass).
+### Final pass: accessibility audit and leftover boilerplate
+
+A few things only show up once you actually check, not just by reading the code:
+
+- The editable label's `<input>` had `focus:outline-none` with nothing replacing it — a keyboard user
+  tabbing into edit mode would see no focus indicator at all. Fixed with `focus-visible:outline` matching
+  the rest of the app's convention (suppress the default ring on mouse focus, keep a visible one for
+  keyboard focus).
+- Contrast, checked by computing actual ratios rather than eyeballing them (Tailwind v4's neutral palette
+  is defined in OKLCH, so "looks about right" isn't the same as passing): the caption micro-labels
+  ("FROM"/"TO") at `text-neutral-500` measured 4.74:1 at 12px bold — technically passes WCAG AA's 4.5:1,
+  but with too little margin for text that small, so bumped to `neutral-600` (7.81:1). The slider track's
+  unselected segment at `neutral-300` measured 1.48:1 against the white background — fails the 3:1 WCAG
+  1.4.11 non-text contrast requirement for UI components outright, not just a margin problem. Bumped to
+  `neutral-500` (4.74:1).
+- `prefers-reduced-motion`: both hover animations (the slider handle's scale-up, the landing page's arrow
+  nudge) now include `motion-reduce:transition-none` — the hover *state* still applies, just without the
+  animated transition.
+- Leftover from `create-next-app` that never got cleaned up until now: `globals.css`'s dark-mode color
+  override doesn't apply to anything real (no component in this app reads `bg-background`/`text-foreground`
+  or uses a `dark:` variant — checked directly with `grep`), and the `body` had a hardcoded
+  `font-family: Arial, Helvetica, sans-serif` that was silently overriding the Geist font loaded via
+  `next/font` in `layout.tsx` — the font was being downloaded but never actually displayed. Removed the
+  unused dark-mode block, removed the hardcoded font-family, and added `font-sans` to `<body>` so the
+  already-loaded Geist font is the one that actually renders.
+
+### Where this landed
+
+Both routes are prerendered as static output (confirmed in `next build`'s route summary), fully operable
+by keyboard alone (Tab between handles and labels, arrow keys/Home/End to move a handle, Enter/Escape to
+commit/cancel a label edit), and pass `lint`/`tsc`/`test`/`build` clean. 54 tests across adapters, the
+Slider engine, both exercise organisms, and the mock API routes — deliberately not covering: trivial
+presentational atoms, CSS-only hover states, and the async Server Component pages (unsupported by this
+version's Vitest/Jest per their own docs, and low-risk here since those pages do nothing but `await` and
+pass props to already-tested components).
