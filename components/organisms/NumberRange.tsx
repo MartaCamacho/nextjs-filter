@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from "react";
 import EditableRangeLabel from "@/components/molecules/EditableRangeLabel";
-import Slider from "@/components/organisms/Slider";
+import Range from "@/components/organisms/Range";
 import { formatCurrency } from "@/lib/format";
-import { createContinuousAdapter } from "@/lib/slider/adapters";
+import { createContinuousAdapter } from "@/lib/adapters";
 import { clamp } from "@/lib/utils";
 import type { NumberRangeResponse, SelectedRange } from "@/types/range";
 
@@ -34,7 +34,7 @@ const NumberRange = ({ min, max }: NumberRangeResponse) => {
 
   return (
     <div className="w-full">
-      <Slider
+      <Range
         adapter={adapter}
         value={range}
         onChange={setRange}

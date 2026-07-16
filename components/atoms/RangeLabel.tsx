@@ -9,7 +9,7 @@ type RangeLabelProps = {
 const RangeLabel = ({ caption, value, onClick }: RangeLabelProps) => {
   return (
     <div>
-      <span className="block text-xs font-bold tracking-wide text-neutral-500 uppercase">
+      <span className="block text-xs font-bold tracking-wide text-neutral-600 uppercase">
         {caption}
       </span>
       {onClick ? (

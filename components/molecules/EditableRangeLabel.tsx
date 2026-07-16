@@ -42,7 +42,7 @@ const EditableRangeLabel = ({
 
   return (
     <div>
-      <span className="block text-xs font-bold tracking-wide text-neutral-500 uppercase">
+      <span className="block text-xs font-bold tracking-wide text-neutral-600 uppercase">
         {caption}
       </span>
       <input
@@ -55,7 +55,7 @@ const EditableRangeLabel = ({
         onKeyDown={handleKeyDown}
         className={joinClassNames(
           "w-24 rounded-none border border-black px-2 py-1 text-sm text-black",
-          "focus:outline-none",
+          "focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black",
         )}
       />
     </div>

@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import NumberRange from "@/components/organisms/NumberRange";
 import { getNumberRange } from "@/lib/data";
+
+export const metadata: Metadata = {
+  title: "Normal range — Range component",
+};
 
 const Exercise1Page = async () => {
   const { min, max } = await getNumberRange();

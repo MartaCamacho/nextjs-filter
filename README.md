@@ -29,8 +29,8 @@ npm test        # watch mode
 npm run test:ci # single run, used in CI
 ```
 
-Vitest + React Testing Library (`jsdom` environment). See the "Testing scope" section below (filled in as
-the interactive components land) for what's covered deliberately vs. skipped, and why.
+Vitest + React Testing Library (`jsdom` environment). See "Testing scope so far" and "Where this landed"
+below for what's covered deliberately vs. skipped, and why.
 
 ## Other scripts
 
@@ -53,12 +53,17 @@ app/
 components/
   atoms/       — smallest building blocks (track, handle, static label)
   molecules/   — one atom + local behavior (click-to-edit label)
-  organisms/   — feature-complete pieces (the generic Slider engine,
+  organisms/   — feature-complete pieces (the generic Range engine,
                  and the two exercise-specific compositions)
 
 lib/           — adapters, mock data functions, format/utils helpers
 types/         — shared TypeScript types
 ```
+
+The `<Range />` the exercise asks for is `components/organisms/Range` — the custom, domain-agnostic
+dual-handle range primitive. Its "two usage modes" are the two adapters it accepts:
+`NumberRange`/`FixedValuesRange` are thin per-mode compositions that hand `Range` a continuous or a
+discrete adapter plus the matching labels.
 
 ## Architecture decisions
 
@@ -77,11 +82,11 @@ not just "what did you build."
   version of Next.js boots its HTTP server before loading env files, so `PORT` in `.env` is a no-op (per
   the CLI reference doc).
 
-### The Slider engine: one adapter interface, two domains
+### The Range engine: one adapter interface, two domains
 
 `/exercise1` and `/exercise2` are the same interaction — drag two handles, keyboard-step them, don't let
 them cross — over two different domains: a continuous range and a fixed list of values. Rather than build
-two sliders, `components/organisms/Slider` implements the interaction once (drag, keyboard, ARIA,
+two ranges, `components/organisms/Range` implements the interaction once (drag, keyboard, ARIA,
 collision) and takes a `RangeAdapter` that answers the only questions that actually differ between the two
 domains: what are the bounds, how does a value map to a track position, and what's the next/previous valid
 value.
@@ -94,18 +99,18 @@ value.
 
 The honest reason this is worth it isn't "saves memory" (materializing an array for `{min:1,max:100}`
 costs nothing) — it's that collision-prevention, keyboard handling, and ARIA wiring are hard to get right
-and are exactly the same regardless of domain, so they get written and tested once. `Slider` itself has no
+and are exactly the same regardless of domain, so they get written and tested once. `Range` itself has no
 idea whether it's continuous or discrete.
 
 Collision (handles can't cross) is deliberately **not** part of the adapter — it's resolved once in
-`useDualSlider` via a plain clamp against the sibling handle's current value. Home/End reuse that same
+`useRange` via a plain clamp against the sibling handle's current value. Home/End reuse that same
 clamp by always passing the domain bound (`adapter.min`/`adapter.max`); since the clamp is already
 sibling-aware, "jump to the domain edge" and "jump to the sibling" fall out of the same code path instead
 of needing a special case.
 
 ### Testing scope so far
 
-Adapter math and `Slider`'s keyboard/ARIA/collision behavior are covered thoroughly (both domains). Drag
+Adapter math and `Range`'s keyboard/ARIA/collision behavior are covered thoroughly (both domains). Drag
 is covered by mechanics-level tests with a mocked `getBoundingClientRect`, but keyboard is the primary
 interaction-test surface — no real layout in `jsdom`, so keyboard needs no mocking and is less brittle.
 Not tested: hover-enlarge and the `cursor: grab`/`grabbing` states, since they're pure CSS with no
@@ -123,7 +128,7 @@ two route tests live together in one `app/api/routes.test.ts` for the same reaso
 segment, and the exported function must be literally named after the HTTP verb (`GET`) for the framework
 to wire it up — not a naming choice, a routing convention.
 
-Server Components (landing in the next two chunks) call the `lib/data` functions **directly**, not through
+Each exercise's Server Component calls the `lib/data` functions **directly**, not through
 `fetch('/api/...')`.
 
 This wasn't the original plan — self-fetching the Route Handler from the Server Component was, since it
@@ -143,7 +148,7 @@ protection wasn't worth losing the ability to unit test the Route Handlers direc
 
 ### State: plain `useState`, not Zustand — and how that conclusion was reached
 
-`Slider` and `EditableRangeLabel` stay controlled (`value`/`onChange` props) regardless of what manages
+`Range` and `EditableRangeLabel` stay controlled (`value`/`onChange` props) regardless of what manages
 state above them — the reusable, domain-agnostic pieces, proven against plain `useState` since chunk 2's
 tests. The question was only ever about `NumberRange`/`FixedValuesRange`'s own `{minValue, maxValue}`.
 
@@ -166,7 +171,7 @@ reason, not a style preference:
    value is correct from the very first render — server-rendered HTML included — with no effect required
    to correct it after the fact. Clamping stays centralized as two small calls to the existing `clamp`
    utility (`lib/utils.ts`), inline in each organism, reached by both the slider's drag/keyboard path
-   (already clamped by `useDualSlider` before it gets here) and the editable label's typed commits.
+   (already clamped by `useRange` before it gets here) and the editable label's typed commits.
    Re-verified against the built output: `aria-valuenow` now reads `"1"`/`"100"` in the static HTML.
 
 The state here is fully scoped to one component's lifetime and derived from its own props — not
@@ -184,7 +189,7 @@ itself (not a unit test) verifying it renders correctly as static output.
 
 ### Exercise 2: how much of exercise 1 actually gets reused
 
-`FixedValuesRange` is `Slider` (discrete adapter instead of continuous) + two static `RangeLabel` + its own
+`FixedValuesRange` is `Range` (discrete adapter instead of continuous) + two static `RangeLabel` + its own
 `useState<SelectedRange>` — no new interaction logic at all. `RangeLabel` itself only exists as its own component
 because exercise 2 gave it a second, genuinely different caller: it was extracted out of
 `EditableRangeLabel` at that point, not before, since a shared component with exactly one caller is just
@@ -196,4 +201,38 @@ components duplicating the same caption+value markup.
 (back link, wrapper, heading). Left as-is rather than pulled into a shared layout — it's small, stable,
 and restructuring already-shipped routing for that little code wasn't worth it.
 
-More sections land as the corresponding code does (chunk 6's final pass).
+### Final pass: accessibility audit and leftover boilerplate
+
+A few things only show up once you actually check, not just by reading the code:
+
+- The editable label's `<input>` had `focus:outline-none` with nothing replacing it — a keyboard user
+  tabbing into edit mode would see no focus indicator at all. Fixed with `focus-visible:outline` matching
+  the rest of the app's convention (suppress the default ring on mouse focus, keep a visible one for
+  keyboard focus).
+- Contrast, checked by computing actual ratios rather than eyeballing them (Tailwind v4's neutral palette
+  is defined in OKLCH, so "looks about right" isn't the same as passing): the caption micro-labels
+  ("FROM"/"TO") at `text-neutral-500` measured 4.74:1 at 12px bold — technically passes WCAG AA's 4.5:1,
+  but with too little margin for text that small, so bumped to `neutral-600` (7.81:1). The slider track's
+  unselected segment at `neutral-300` measured 1.48:1 against the white background — fails the 3:1 WCAG
+  1.4.11 non-text contrast requirement for UI components outright, not just a margin problem. Bumped to
+  `neutral-500` (4.74:1).
+- `prefers-reduced-motion`: both hover animations (the slider handle's scale-up, the landing page's arrow
+  nudge) now include `motion-reduce:transition-none` — the hover *state* still applies, just without the
+  animated transition.
+- Leftover from `create-next-app` that never got cleaned up until now: `globals.css`'s dark-mode color
+  override doesn't apply to anything real (no component in this app reads `bg-background`/`text-foreground`
+  or uses a `dark:` variant — checked directly with `grep`), and the `body` had a hardcoded
+  `font-family: Arial, Helvetica, sans-serif` that was silently overriding the Geist font loaded via
+  `next/font` in `layout.tsx` — the font was being downloaded but never actually displayed. Removed the
+  unused dark-mode block, removed the hardcoded font-family, and added `font-sans` to `<body>` so the
+  already-loaded Geist font is the one that actually renders.
+
+### Where this landed
+
+Both routes are prerendered as static output (confirmed in `next build`'s route summary), fully operable
+by keyboard alone (Tab between handles and labels, arrow keys/Home/End to move a handle, Enter/Escape to
+commit/cancel a label edit), and pass `lint`/`tsc`/`test`/`build` clean. 54 tests across adapters, the
+Range engine, both exercise organisms, and the mock API routes — deliberately not covering: trivial
+presentational atoms, CSS-only hover states, and the async Server Component pages (unsupported by this
+version's Vitest/Jest per their own docs, and low-risk here since those pages do nothing but `await` and
+pass props to already-tested components).

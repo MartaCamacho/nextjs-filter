@@ -1,11 +1,11 @@
-type SliderTrackProps = {
+type RangeTrackProps = {
   minPercent: number;
   maxPercent: number;
 };
 
-const SliderTrack = ({ minPercent, maxPercent }: SliderTrackProps) => {
+const RangeTrack = ({ minPercent, maxPercent }: RangeTrackProps) => {
   return (
-    <div className="relative h-0.5 w-full rounded-none bg-neutral-300">
+    <div className="relative h-0.5 w-full rounded-none bg-neutral-500">
       <div
         className="absolute h-0.5 bg-black"
         style={{
@@ -17,4 +17,4 @@ const SliderTrack = ({ minPercent, maxPercent }: SliderTrackProps) => {
   );
 };
 
-export default SliderTrack;
+export default RangeTrack;
