@@ -20,10 +20,7 @@ const FixedValuesRange = ({ rangeValues }: FixedRangeValuesResponse) => {
     }),
   );
 
-  const minValue = useRangeStore((state) => state.minValue);
-  const maxValue = useRangeStore((state) => state.maxValue);
-  const setMinValue = useRangeStore((state) => state.setMinValue);
-  const setMaxValue = useRangeStore((state) => state.setMaxValue);
+  const { minValue, maxValue, setMinValue, setMaxValue } = useRangeStore();
 
   return (
     <div className="w-full">
