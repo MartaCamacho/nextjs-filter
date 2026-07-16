@@ -41,7 +41,7 @@ const Home = () => {
                 </span>
                 <span
                   aria-hidden="true"
-                  className="shrink-0 text-black transition-transform group-hover:translate-x-1"
+                  className="shrink-0 text-black transition-transform group-hover:translate-x-1 motion-reduce:transition-none"
                 >
                   →
                 </span>

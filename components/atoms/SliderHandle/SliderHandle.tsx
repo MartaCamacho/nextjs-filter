@@ -50,7 +50,7 @@ const SliderHandle = ({
       <span
         aria-hidden="true"
         className={joinClassNames(
-          "h-3 w-3 rounded-none bg-black transition-transform duration-150 group-hover:scale-125",
+          "h-3 w-3 rounded-none bg-black transition-transform duration-150 group-hover:scale-125 motion-reduce:transition-none",
           isDragging && "scale-125",
         )}
       />
