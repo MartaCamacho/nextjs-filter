@@ -1,9 +1,9 @@
-import SliderHandle from "@/components/atoms/SliderHandle";
-import SliderTrack from "@/components/atoms/SliderTrack";
+import RangeHandle from "@/components/atoms/RangeHandle";
+import RangeTrack from "@/components/atoms/RangeTrack";
 import type { RangeAdapter, SelectedRange } from "@/types/range";
-import { useDualSlider } from "./useDualSlider";
+import { useRange } from "./useRange";
 
-type SliderProps = {
+type RangeProps = {
   adapter: RangeAdapter;
   value: SelectedRange;
   onChange: (next: SelectedRange) => void;
@@ -12,15 +12,15 @@ type SliderProps = {
   formatValue: (value: number) => string;
 };
 
-const Slider = ({
+const Range = ({
   adapter,
   value,
   onChange,
   minLabel,
   maxLabel,
   formatValue,
-}: SliderProps) => {
-  const { trackRef, minPercent, maxPercent, getHandleProps } = useDualSlider({
+}: RangeProps) => {
+  const { trackRef, minPercent, maxPercent, getHandleProps } = useRange({
     adapter,
     value,
     onChange,
@@ -31,11 +31,11 @@ const Slider = ({
 
   return (
     <div ref={trackRef} className="relative flex h-11 w-full items-center">
-      <SliderTrack minPercent={minPercent} maxPercent={maxPercent} />
-      <SliderHandle {...getHandleProps("min")} />
-      <SliderHandle {...getHandleProps("max")} />
+      <RangeTrack minPercent={minPercent} maxPercent={maxPercent} />
+      <RangeHandle {...getHandleProps("min")} />
+      <RangeHandle {...getHandleProps("max")} />
     </div>
   );
 };
 
-export default Slider;
+export default Range;

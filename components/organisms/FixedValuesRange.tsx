@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from "react";
 import RangeLabel from "@/components/atoms/RangeLabel";
-import Slider from "@/components/organisms/Slider";
+import Range from "@/components/organisms/Range";
 import { formatCurrency } from "@/lib/format";
-import { createDiscreteAdapter } from "@/lib/slider/adapters";
+import { createDiscreteAdapter } from "@/lib/adapters";
 import type { FixedRangeValuesResponse, SelectedRange } from "@/types/range";
 
 const FixedValuesRange = ({ rangeValues }: FixedRangeValuesResponse) => {
@@ -19,7 +19,7 @@ const FixedValuesRange = ({ rangeValues }: FixedRangeValuesResponse) => {
 
   return (
     <div className="w-full">
-      <Slider
+      <Range
         adapter={adapter}
         value={range}
         onChange={setRange}

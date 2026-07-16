@@ -53,12 +53,17 @@ app/
 components/
   atoms/       — smallest building blocks (track, handle, static label)
   molecules/   — one atom + local behavior (click-to-edit label)
-  organisms/   — feature-complete pieces (the generic Slider engine,
+  organisms/   — feature-complete pieces (the generic Range engine,
                  and the two exercise-specific compositions)
 
 lib/           — adapters, mock data functions, format/utils helpers
 types/         — shared TypeScript types
 ```
+
+The `<Range />` the exercise asks for is `components/organisms/Range` — the custom, domain-agnostic
+dual-handle range primitive. Its "two usage modes" are the two adapters it accepts:
+`NumberRange`/`FixedValuesRange` are thin per-mode compositions that hand `Range` a continuous or a
+discrete adapter plus the matching labels.
 
 ## Architecture decisions
 
@@ -77,11 +82,11 @@ not just "what did you build."
   version of Next.js boots its HTTP server before loading env files, so `PORT` in `.env` is a no-op (per
   the CLI reference doc).
 
-### The Slider engine: one adapter interface, two domains
+### The Range engine: one adapter interface, two domains
 
 `/exercise1` and `/exercise2` are the same interaction — drag two handles, keyboard-step them, don't let
 them cross — over two different domains: a continuous range and a fixed list of values. Rather than build
-two sliders, `components/organisms/Slider` implements the interaction once (drag, keyboard, ARIA,
+two ranges, `components/organisms/Range` implements the interaction once (drag, keyboard, ARIA,
 collision) and takes a `RangeAdapter` that answers the only questions that actually differ between the two
 domains: what are the bounds, how does a value map to a track position, and what's the next/previous valid
 value.
@@ -94,18 +99,18 @@ value.
 
 The honest reason this is worth it isn't "saves memory" (materializing an array for `{min:1,max:100}`
 costs nothing) — it's that collision-prevention, keyboard handling, and ARIA wiring are hard to get right
-and are exactly the same regardless of domain, so they get written and tested once. `Slider` itself has no
+and are exactly the same regardless of domain, so they get written and tested once. `Range` itself has no
 idea whether it's continuous or discrete.
 
 Collision (handles can't cross) is deliberately **not** part of the adapter — it's resolved once in
-`useDualSlider` via a plain clamp against the sibling handle's current value. Home/End reuse that same
+`useRange` via a plain clamp against the sibling handle's current value. Home/End reuse that same
 clamp by always passing the domain bound (`adapter.min`/`adapter.max`); since the clamp is already
 sibling-aware, "jump to the domain edge" and "jump to the sibling" fall out of the same code path instead
 of needing a special case.
 
 ### Testing scope so far
 
-Adapter math and `Slider`'s keyboard/ARIA/collision behavior are covered thoroughly (both domains). Drag
+Adapter math and `Range`'s keyboard/ARIA/collision behavior are covered thoroughly (both domains). Drag
 is covered by mechanics-level tests with a mocked `getBoundingClientRect`, but keyboard is the primary
 interaction-test surface — no real layout in `jsdom`, so keyboard needs no mocking and is less brittle.
 Not tested: hover-enlarge and the `cursor: grab`/`grabbing` states, since they're pure CSS with no
@@ -143,7 +148,7 @@ protection wasn't worth losing the ability to unit test the Route Handlers direc
 
 ### State: plain `useState`, not Zustand — and how that conclusion was reached
 
-`Slider` and `EditableRangeLabel` stay controlled (`value`/`onChange` props) regardless of what manages
+`Range` and `EditableRangeLabel` stay controlled (`value`/`onChange` props) regardless of what manages
 state above them — the reusable, domain-agnostic pieces, proven against plain `useState` since chunk 2's
 tests. The question was only ever about `NumberRange`/`FixedValuesRange`'s own `{minValue, maxValue}`.
 
@@ -166,7 +171,7 @@ reason, not a style preference:
    value is correct from the very first render — server-rendered HTML included — with no effect required
    to correct it after the fact. Clamping stays centralized as two small calls to the existing `clamp`
    utility (`lib/utils.ts`), inline in each organism, reached by both the slider's drag/keyboard path
-   (already clamped by `useDualSlider` before it gets here) and the editable label's typed commits.
+   (already clamped by `useRange` before it gets here) and the editable label's typed commits.
    Re-verified against the built output: `aria-valuenow` now reads `"1"`/`"100"` in the static HTML.
 
 The state here is fully scoped to one component's lifetime and derived from its own props — not
@@ -184,7 +189,7 @@ itself (not a unit test) verifying it renders correctly as static output.
 
 ### Exercise 2: how much of exercise 1 actually gets reused
 
-`FixedValuesRange` is `Slider` (discrete adapter instead of continuous) + two static `RangeLabel` + its own
+`FixedValuesRange` is `Range` (discrete adapter instead of continuous) + two static `RangeLabel` + its own
 `useState<SelectedRange>` — no new interaction logic at all. `RangeLabel` itself only exists as its own component
 because exercise 2 gave it a second, genuinely different caller: it was extracted out of
 `EditableRangeLabel` at that point, not before, since a shared component with exactly one caller is just
@@ -227,7 +232,7 @@ A few things only show up once you actually check, not just by reading the code:
 Both routes are prerendered as static output (confirmed in `next build`'s route summary), fully operable
 by keyboard alone (Tab between handles and labels, arrow keys/Home/End to move a handle, Enter/Escape to
 commit/cancel a label edit), and pass `lint`/`tsc`/`test`/`build` clean. 54 tests across adapters, the
-Slider engine, both exercise organisms, and the mock API routes — deliberately not covering: trivial
+Range engine, both exercise organisms, and the mock API routes — deliberately not covering: trivial
 presentational atoms, CSS-only hover states, and the async Server Component pages (unsupported by this
 version's Vitest/Jest per their own docs, and low-risk here since those pages do nothing but `await` and
 pass props to already-tested components).

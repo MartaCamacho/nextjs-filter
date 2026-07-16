@@ -7,13 +7,13 @@ import {
   type PointerEvent as ReactPointerEvent,
   type RefObject,
 } from "react";
-import type { SliderHandleAriaProps } from "@/components/atoms/SliderHandle";
+import type { RangeHandleAriaProps } from "@/components/atoms/RangeHandle";
 import { clamp } from "@/lib/utils";
 import type { RangeAdapter, SelectedRange } from "@/types/range";
 
 export type HandleKey = "min" | "max";
 
-type UseDualSliderProps = {
+type UseRangeProps = {
   adapter: RangeAdapter;
   value: SelectedRange;
   onChange: (next: SelectedRange) => void;
@@ -27,26 +27,26 @@ type HandleRenderProps = {
   zIndex: number;
   valueNow: number;
   isDragging: boolean;
-  ariaProps: SliderHandleAriaProps;
+  ariaProps: RangeHandleAriaProps;
   onPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => void;
   onKeyDown: (event: ReactKeyboardEvent<HTMLDivElement>) => void;
 };
 
-type UseDualSliderResult = {
+type UseRangeResult = {
   trackRef: RefObject<HTMLDivElement | null>;
   minPercent: number;
   maxPercent: number;
   getHandleProps: (handle: HandleKey) => HandleRenderProps;
 };
 
-export const useDualSlider = ({
+export const useRange = ({
   adapter,
   value,
   onChange,
   minLabel,
   maxLabel,
   formatValue,
-}: UseDualSliderProps): UseDualSliderResult => {
+}: UseRangeProps): UseRangeResult => {
   const trackRef = useRef<HTMLDivElement>(null);
   const [draggingHandle, setDraggingHandle] = useState<HandleKey | null>(
     null,

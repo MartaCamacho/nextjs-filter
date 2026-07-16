@@ -5,24 +5,24 @@ import type {
 } from "react";
 import { joinClassNames } from "@/lib/utils";
 
-export type SliderHandleAriaProps = Required<
+export type RangeHandleAriaProps = Required<
   Pick<
     AriaAttributes,
     "aria-label" | "aria-valuemin" | "aria-valuemax" | "aria-valuetext"
   >
 >;
 
-type SliderHandleProps = {
+type RangeHandleProps = {
   percent: number;
   zIndex: number;
   valueNow: number;
   isDragging: boolean;
-  ariaProps: SliderHandleAriaProps;
+  ariaProps: RangeHandleAriaProps;
   onPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => void;
   onKeyDown: (event: ReactKeyboardEvent<HTMLDivElement>) => void;
 };
 
-const SliderHandle = ({
+const RangeHandle = ({
   percent,
   zIndex,
   valueNow,
@@ -30,7 +30,7 @@ const SliderHandle = ({
   ariaProps,
   onPointerDown,
   onKeyDown,
-}: SliderHandleProps) => {
+}: RangeHandleProps) => {
   return (
     <div
       role="slider"
@@ -58,4 +58,4 @@ const SliderHandle = ({
   );
 };
 
-export default SliderHandle;
+export default RangeHandle;

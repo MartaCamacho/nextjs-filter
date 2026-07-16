@@ -2,21 +2,21 @@ import { useState } from "react";
 import { describe, expect, test, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { createContinuousAdapter, createDiscreteAdapter } from "@/lib/slider/adapters";
+import { createContinuousAdapter, createDiscreteAdapter } from "@/lib/adapters";
 import type { RangeAdapter, SelectedRange } from "@/types/range";
-import Slider from "./Slider";
+import Range from "./Range";
 
 const formatValue = (value: number) => `${value}`;
 
-type TestSliderProps = {
+type TestRangeProps = {
   adapter: RangeAdapter;
   initialValue: SelectedRange;
 };
 
-const TestSlider = ({ adapter, initialValue }: TestSliderProps) => {
+const TestRange = ({ adapter, initialValue }: TestRangeProps) => {
   const [value, setValue] = useState(initialValue);
   return (
-    <Slider
+    <Range
       adapter={adapter}
       value={value}
       onChange={setValue}
@@ -41,11 +41,11 @@ const mockTrackWidth = (element: HTMLElement, width: number) => {
   });
 };
 
-describe("Slider", () => {
+describe("Range", () => {
   test("renders both handles with correct initial ARIA attributes", () => {
     const adapter = createContinuousAdapter(1, 100);
     render(
-      <TestSlider
+      <TestRange
         adapter={adapter}
         initialValue={{ minValue: 20, maxValue: 80 }}
       />,
@@ -68,7 +68,7 @@ describe("Slider", () => {
     const user = userEvent.setup();
     const adapter = createContinuousAdapter(1, 100);
     render(
-      <TestSlider
+      <TestRange
         adapter={adapter}
         initialValue={{ minValue: 20, maxValue: 80 }}
       />,
@@ -85,7 +85,7 @@ describe("Slider", () => {
     const user = userEvent.setup();
     const adapter = createContinuousAdapter(1, 100);
     render(
-      <TestSlider
+      <TestRange
         adapter={adapter}
         initialValue={{ minValue: 20, maxValue: 80 }}
       />,
@@ -102,7 +102,7 @@ describe("Slider", () => {
     const user = userEvent.setup();
     const adapter = createContinuousAdapter(1, 100);
     render(
-      <TestSlider
+      <TestRange
         adapter={adapter}
         initialValue={{ minValue: 20, maxValue: 80 }}
       />,
@@ -119,7 +119,7 @@ describe("Slider", () => {
     const user = userEvent.setup();
     const adapter = createContinuousAdapter(1, 100);
     render(
-      <TestSlider
+      <TestRange
         adapter={adapter}
         initialValue={{ minValue: 20, maxValue: 80 }}
       />,
@@ -136,7 +136,7 @@ describe("Slider", () => {
     const user = userEvent.setup();
     const adapter = createContinuousAdapter(1, 100);
     render(
-      <TestSlider
+      <TestRange
         adapter={adapter}
         initialValue={{ minValue: 78, maxValue: 80 }}
       />,
@@ -153,7 +153,7 @@ describe("Slider", () => {
     const user = userEvent.setup();
     const adapter = createContinuousAdapter(1, 100);
     render(
-      <TestSlider
+      <TestRange
         adapter={adapter}
         initialValue={{ minValue: 20, maxValue: 80 }}
       />,
@@ -169,7 +169,7 @@ describe("Slider", () => {
   test("ArrowRight prevents the default scroll behavior", () => {
     const adapter = createContinuousAdapter(1, 100);
     render(
-      <TestSlider
+      <TestRange
         adapter={adapter}
         initialValue={{ minValue: 20, maxValue: 80 }}
       />,
@@ -189,7 +189,7 @@ describe("Slider", () => {
       1.99, 5.99, 10.99, 30.99, 50.99, 70.99,
     ]);
     render(
-      <TestSlider
+      <TestRange
         adapter={adapter}
         initialValue={{ minValue: 1.99, maxValue: 70.99 }}
       />,
@@ -207,7 +207,7 @@ describe("Slider", () => {
       1.99, 5.99, 10.99, 30.99, 50.99, 70.99,
     ]);
     const { container } = render(
-      <TestSlider
+      <TestRange
         adapter={adapter}
         initialValue={{ minValue: 1.99, maxValue: 70.99 }}
       />,
@@ -227,7 +227,7 @@ describe("Slider", () => {
   test("dragging the min handle updates its value based on pointer position", () => {
     const adapter = createContinuousAdapter(1, 100);
     const { container } = render(
-      <TestSlider
+      <TestRange
         adapter={adapter}
         initialValue={{ minValue: 20, maxValue: 80 }}
       />,
