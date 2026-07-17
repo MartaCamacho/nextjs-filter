@@ -7,6 +7,10 @@ modes:
   labels.
 - **`/exercise2`** — range constrained to a fixed set of allowed values, with static labels.
 
+**Live demo:** https://nextjs-filter-blue.vercel.app — [`/exercise1`](https://nextjs-filter-blue.vercel.app/exercise1)
+(normal range) and [`/exercise2`](https://nextjs-filter-blue.vercel.app/exercise2) (fixed values range),
+deployed on Vercel.
+
 Built with Next.js 16 (App Router) and TypeScript on top of a stock `create-next-app` scaffold. This repo
 targets **Next.js 16.2.10** specifically, which has real breaking changes vs. older Next.js — see
 `node_modules/next/dist/docs/` for this version's own documentation before assuming an API from memory.
