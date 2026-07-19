@@ -1,15 +1,6 @@
-import type { Metadata } from "next";
 import Link from "next/link";
-import NumberRange from "@/components/organisms/NumberRange";
-import { getNumberRange } from "@/lib/data";
 
-export const metadata: Metadata = {
-  title: "Normal range — Range component",
-};
-
-const Exercise1Page = async () => {
-  const { min, max } = await getNumberRange();
-
+const ExercisesLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex flex-1 items-center justify-center px-6">
       <main className="w-full max-w-md py-24">
@@ -23,12 +14,10 @@ const Exercise1Page = async () => {
         <h1 className="mt-6 text-xl font-bold tracking-wide text-black uppercase">
           Price
         </h1>
-        <div className="mt-10">
-          <NumberRange min={min} max={max} />
-        </div>
+        <div className="mt-10">{children}</div>
       </main>
     </div>
   );
 };
 
-export default Exercise1Page;
+export default ExercisesLayout;

@@ -51,7 +51,8 @@ CI (`.github/workflows/ci.yml`) runs lint, tests, and build on every PR and push
 ```
 app/
   page.tsx                — landing linking to both exercises
-  exercise1/, exercise2/   — one route per usage mode
+  (exercises)/            — route group (no URL segment): shared layout + loading
+    exercise1/, exercise2/ — one route per usage mode (URLs stay /exercise1, /exercise2)
   api/                     — mocked HTTP services backing each exercise
 
 components/
@@ -201,9 +202,13 @@ indirection. `EditableRangeLabel` now renders `RangeLabel` for its non-editing s
 turns the value into a button; omitting it — exercise 2's case — renders a plain span), instead of the two
 components duplicating the same caption+value markup.
 
-`app/exercise1/page.tsx` and `app/exercise2/page.tsx` still duplicate the same ~10 lines of page shell
-(back link, wrapper, heading). Left as-is rather than pulled into a shared layout — it's small, stable,
-and restructuring already-shipped routing for that little code wasn't worth it.
+The two pages' shared shell (back link, wrapper, heading) lives once in a `(exercises)` **route group**
+layout — the parentheses keep it out of the URL, so the routes are still `/exercise1` and `/exercise2`.
+Each `page.tsx` is now just its `metadata`, the `await`, and the component. The single
+`(exercises)/loading.tsx` replaces the two identical per-route ones; because `loading.tsx` wraps the page
+but not the layout, the shell (back link + heading) stays on screen and only the range area shows a
+skeleton while the page's data streams in — and keeping the data fetch in `page.tsx` (not the layout) is
+what lets that loading state appear at all.
 
 ### Final pass: accessibility audit and leftover boilerplate
 
