@@ -37,8 +37,8 @@ below — this file is the short, imperative version ("what to do").
   in the adapter.
 - **Mock data**: `lib/data.ts` functions are the source of truth. Server Components call them **directly**
   — never `fetch('/api/...')` your own route handler (self-fetching fails `next build`). The
-  `app/api/*/route.ts` handlers are thin `GET` wrappers (`dynamic = "force-static"`, constant data) so the
-  mocked HTTP endpoint stays independently curlable.
+  `app/api/*/route.ts` handlers are thin `GET` wrappers so the mocked HTTP endpoint stays independently
+  curlable.
 
 # Code conventions
 
